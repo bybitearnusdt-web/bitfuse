@@ -2,14 +2,17 @@
 
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, AlertCircle } from 'lucide-react';
 import { formatCPF, formatPhone, isValidEmail, isValidCPF, isValidPhone } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 
 export default function RegisterPage() {
   return (
@@ -20,6 +23,8 @@ export default function RegisterPage() {
 }
 
 function RegisterContent() {
+  const router = useRouter();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref');
   
@@ -39,6 +44,12 @@ function RegisterContent() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Redirect if already logged in
+  if (user) {
+    router.push('/');
+    return null;
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -88,10 +99,36 @@ function RegisterContent() {
 
     setIsLoading(true);
     
-    // Mock registration - redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1500);
+    try {
+      // Register with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            username: formData.username,
+            phone: formData.phone,
+            cpf: formData.cpf,
+            referral_code: referralCode,
+          },
+        },
+      });
+
+      if (error) {
+        setErrors({ general: error.message });
+        return;
+      }
+
+      if (data.user) {
+        // Registration successful - user will be redirected by auth state change
+        // Could show a success message here if needed
+      }
+    } catch (error) {
+      setErrors({ general: 'An unexpected error occurred' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -137,6 +174,12 @@ function RegisterContent() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errors.general && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg text-red-600 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.general}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
                 <Input
