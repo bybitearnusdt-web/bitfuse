@@ -30,7 +30,7 @@ Before starting, ensure you have:
 ### Step 2: Environment Configuration
 - [ ] Copy the environment template:
   ```bash
-  cp .env.local .env.local.backup  # backup if exists
+  cp .env.example .env.local
   ```
 
 - [ ] Edit `.env.local` with your configuration (see Environment Variables section below)
