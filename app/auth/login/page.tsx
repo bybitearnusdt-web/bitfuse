@@ -2,26 +2,52 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Mock login - redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
+    try {
+      // TODO: Replace with real authentication call
+      // Example integration points:
+      // - Supabase: const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      // - Firebase: await signInWithEmailAndPassword(auth, email, password)
+      // - Custom API: await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+      
+      // Mock authentication logic (to be replaced)
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // Simulate authentication logic
+          if (email && password) {
+            resolve(true);
+          } else {
+            reject(new Error('Email e senha são obrigatórios'));
+          }
+        }, 1000);
+      });
+      
+      // Use Next.js router for navigation instead of window.location
+      router.push('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,6 +69,13 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -53,6 +86,8 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  aria-label="Endereço de email"
+                  aria-describedby="email-description"
                 />
               </div>
               
@@ -66,6 +101,8 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    aria-label="Senha da conta"
+                    aria-describedby="password-description"
                   />
                   <Button
                     type="button"
@@ -73,6 +110,7 @@ export default function LoginPage() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -92,7 +130,12 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                aria-label={isLoading ? 'Fazendo login...' : 'Entrar na conta'}
+              >
                 {isLoading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
