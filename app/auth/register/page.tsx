@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,7 @@ export default function RegisterPage() {
 
 function RegisterContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const referralCode = searchParams.get('ref');
   
   const [showPassword, setShowPassword] = useState(false);
@@ -88,10 +89,25 @@ function RegisterContent() {
 
     setIsLoading(true);
     
-    // Mock registration - redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1500);
+    try {
+      // TODO: Replace with actual authentication provider integration
+      // Example integrations:
+      // - Supabase: supabaseClient.auth.signUp({ email: formData.email, password: formData.password })
+      // - Firebase: createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      // - Custom API: await fetch('/api/auth/register', { method: 'POST', body: JSON.stringify(formData) })
+      
+      // Simulate registration process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Navigate to dashboard on successful registration
+      router.push('/');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      // Handle registration errors here
+      setErrors({ general: 'Registration failed. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -137,6 +153,11 @@ function RegisterContent() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errors.general && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{errors.general}</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
                 <Input
@@ -145,8 +166,10 @@ function RegisterContent() {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className={errors.name ? 'border-red-500' : ''}
+                  aria-label="Nome completo"
+                  aria-describedby={errors.name ? 'name-error' : undefined}
                 />
-                {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                {errors.name && <p id="name-error" className="text-sm text-red-500">{errors.name}</p>}
               </div>
 
               <div className="space-y-2">
@@ -158,8 +181,10 @@ function RegisterContent() {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className={errors.email ? 'border-red-500' : ''}
+                  aria-label="Endereço de email"
+                  aria-describedby={errors.email ? 'email-error' : undefined}
                 />
-                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                {errors.email && <p id="email-error" className="text-sm text-red-500">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
@@ -170,8 +195,10 @@ function RegisterContent() {
                   value={formData.username}
                   onChange={(e) => handleInputChange('username', e.target.value)}
                   className={errors.username ? 'border-red-500' : ''}
+                  aria-label="Nome de usuário"
+                  aria-describedby={errors.username ? 'username-error' : undefined}
                 />
-                {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
+                {errors.username && <p id="username-error" className="text-sm text-red-500">{errors.username}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -183,8 +210,10 @@ function RegisterContent() {
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     className={errors.phone ? 'border-red-500' : ''}
+                    aria-label="Número de telefone"
+                    aria-describedby={errors.phone ? 'phone-error' : undefined}
                   />
-                  {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+                  {errors.phone && <p id="phone-error" className="text-sm text-red-500">{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -195,8 +224,10 @@ function RegisterContent() {
                     value={formData.cpf}
                     onChange={(e) => handleInputChange('cpf', e.target.value)}
                     className={errors.cpf ? 'border-red-500' : ''}
+                    aria-label="CPF"
+                    aria-describedby={errors.cpf ? 'cpf-error' : undefined}
                   />
-                  {errors.cpf && <p className="text-sm text-red-500">{errors.cpf}</p>}
+                  {errors.cpf && <p id="cpf-error" className="text-sm text-red-500">{errors.cpf}</p>}
                 </div>
               </div>
 
@@ -210,6 +241,8 @@ function RegisterContent() {
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className={errors.password ? 'border-red-500' : ''}
+                    aria-label="Senha"
+                    aria-describedby={errors.password ? 'password-error' : undefined}
                   />
                   <Button
                     type="button"
@@ -217,11 +250,12 @@ function RegisterContent() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+                {errors.password && <p id="password-error" className="text-sm text-red-500">{errors.password}</p>}
               </div>
 
               <div className="space-y-2">
@@ -234,6 +268,8 @@ function RegisterContent() {
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                     className={errors.confirmPassword ? 'border-red-500' : ''}
+                    aria-label="Confirmar senha"
+                    aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
                   />
                   <Button
                     type="button"
@@ -241,11 +277,12 @@ function RegisterContent() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p id="confirm-password-error" className="text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -255,6 +292,8 @@ function RegisterContent() {
                   checked={formData.acceptTerms}
                   onChange={(e) => handleInputChange('acceptTerms', e.target.checked.toString())}
                   className="rounded"
+                  aria-label="Aceitar termos de uso e política de privacidade"
+                  aria-describedby={errors.acceptTerms ? 'terms-error' : undefined}
                 />
                 <Label htmlFor="acceptTerms" className="text-sm">
                   Aceito os{' '}
@@ -267,9 +306,9 @@ function RegisterContent() {
                   </Link>
                 </Label>
               </div>
-              {errors.acceptTerms && <p className="text-sm text-red-500">{errors.acceptTerms}</p>}
+              {errors.acceptTerms && <p id="terms-error" className="text-sm text-red-500">{errors.acceptTerms}</p>}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading} aria-label="Criar conta">
                 {isLoading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
             </form>
