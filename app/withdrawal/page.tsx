@@ -14,13 +14,17 @@ import {
   AlertTriangle, 
   Calculator,
   Info,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
 import { formatCurrency, calculateWithdrawalFee, formatCPF } from '@/lib/utils';
-import { DEFAULT_USER, APP_CONFIG } from '@/lib/constants';
+import { useBalance, useInvestments } from '@/lib/hooks/useData';
+import { APP_CONFIG } from '@/lib/constants';
 
 export default function WithdrawalPage() {
   const router = useRouter();
+  const { balance, loading: balanceLoading } = useBalance();
+  const { investments, loading: investmentsLoading } = useInvestments();
   const [selectedMethod, setSelectedMethod] = useState<'crypto' | 'pix'>('crypto');
   const [amount, setAmount] = useState<string>('');
   const [walletAddress, setWalletAddress] = useState('');
@@ -30,10 +34,12 @@ export default function WithdrawalPage() {
 
   const numericAmount = parseFloat(amount) || 0;
   const { fee, finalAmount } = calculateWithdrawalFee(numericAmount);
-  // For demo purposes, let's simulate a user with no active investments
-  const hasActiveInvestments = false; // DEFAULT_USER.activeInvestments.length > 0;
+  
+  // Check for active investments
+  const activeInvestments = investments.filter(inv => inv.status === 'active');
+  const hasActiveInvestments = activeInvestments.length > 0;
   const canWithdraw = !hasActiveInvestments;
-  const hasBalance = numericAmount <= DEFAULT_USER.balance.available;
+  const hasBalance = balance ? numericAmount <= balance.available : false;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +54,8 @@ export default function WithdrawalPage() {
       newErrors.amount = 'Valor deve ser maior que zero';
     }
     
-    if (!hasBalance) {
-      newErrors.amount = `Saldo insuficiente. Disponível: ${formatCurrency(DEFAULT_USER.balance.available)}`;
+    if (!hasBalance && balance) {
+      newErrors.amount = `Saldo insuficiente. Disponível: ${formatCurrency(balance.available)}`;
     }
     
     if (selectedMethod === 'crypto' && !walletAddress.trim()) {
@@ -111,26 +117,49 @@ export default function WithdrawalPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(DEFAULT_USER.balance.available)}</div>
-            <p className="text-sm text-muted-foreground">
-              Saldo total: {formatCurrency(DEFAULT_USER.balance.total)}
-            </p>
+            {balanceLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Carregando saldo...</span>
+              </div>
+            ) : balance ? (
+              <>
+                <div className="text-2xl font-bold">{formatCurrency(balance.available)}</div>
+                <p className="text-sm text-muted-foreground">
+                  Saldo total: {formatCurrency(balance.total)}
+                </p>
+              </>
+            ) : (
+              <div className="text-2xl font-bold">{formatCurrency(0)}</div>
+            )}
           </CardContent>
         </Card>
 
         {/* Active Investments Warning */}
-        {hasActiveInvestments && (
+        {investmentsLoading ? (
           <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20">
-            <CardContent className="flex items-start gap-3 pt-6">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-yellow-800 dark:text-yellow-200">
-                  Investimentos Ativos
-                </h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  Você possui investimento(s) ativo(s). 
-                  Aguarde a conclusão para poder sacar seus fundos.
-                </p>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Verificando investimentos...</span>
+              </div>
+            </CardContent>
+          </Card>
+        ) : hasActiveInvestments && (
+          <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-yellow-800 dark:text-yellow-200">
+                    Investimentos Ativos Detectados
+                  </h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                    Você possui {activeInvestments.length} investimento{activeInvestments.length > 1 ? 's' : ''} ativo{activeInvestments.length > 1 ? 's' : ''}. 
+                    Para realizar saques, é necessário aguardar o término dos investimentos ou cancelá-los 
+                    (sujeito a penalidades).
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

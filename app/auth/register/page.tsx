@@ -2,14 +2,15 @@
 
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, AlertCircle } from 'lucide-react';
 import { formatCPF, formatPhone, isValidEmail, isValidCPF, isValidPhone } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 export default function RegisterPage() {
   return (
@@ -20,12 +21,15 @@ export default function RegisterPage() {
 }
 
 function RegisterContent() {
+  const router = useRouter();
+  const { signUp } = useAuth();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref');
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -87,11 +91,22 @@ function RegisterContent() {
     }
 
     setIsLoading(true);
+    setError('');
     
-    // Mock registration - redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1500);
+    const { error: signUpError } = await signUp(formData.email, formData.password, {
+      name: formData.name,
+      username: formData.username,
+      phone: formData.phone,
+      cpf: formData.cpf,
+    });
+    
+    if (signUpError) {
+      setError(signUpError);
+      setIsLoading(false);
+    } else {
+      // Success - user should verify email, then redirect to login
+      router.push('/auth/login?message=Verifique seu email para continuar');
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -136,6 +151,12 @@ function RegisterContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 rounded-md bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome Completo</Label>
