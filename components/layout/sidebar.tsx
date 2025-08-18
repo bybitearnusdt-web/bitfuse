@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { MobileNavigation } from '@/lib/mobileNav';
 
 const navigation = [
   {
@@ -52,16 +53,94 @@ const navigation = [
 export function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const cleanupFocusTrap = useRef<(() => void) | null>(null);
+  const cleanupEscHandler = useRef<(() => void) | null>(null);
+
+  // Close drawer function
+  const closeDrawer = () => {
+    setIsMobileOpen(false);
+  };
+
+  // Setup accessibility when drawer opens/closes
+  useEffect(() => {
+    if (isMobileOpen) {
+      // Prevent body scroll
+      MobileNavigation.preventBodyScroll(true);
+      
+      // Setup focus trap
+      if (drawerRef.current) {
+        cleanupFocusTrap.current = MobileNavigation.trapFocus(drawerRef.current);
+      }
+      
+      // Setup ESC key handler
+      cleanupEscHandler.current = MobileNavigation.handleEscapeKey(closeDrawer);
+      
+      // Setup ARIA attributes
+      if (buttonRef.current && drawerRef.current) {
+        MobileNavigation.setupDrawerAria(
+          buttonRef.current,
+          drawerRef.current,
+          true
+        );
+      }
+    } else {
+      // Restore body scroll
+      MobileNavigation.preventBodyScroll(false);
+      
+      // Cleanup focus trap
+      if (cleanupFocusTrap.current) {
+        cleanupFocusTrap.current();
+        cleanupFocusTrap.current = null;
+      }
+      
+      // Cleanup ESC handler
+      if (cleanupEscHandler.current) {
+        cleanupEscHandler.current();
+        cleanupEscHandler.current = null;
+      }
+      
+      // Update ARIA attributes
+      if (buttonRef.current && drawerRef.current) {
+        MobileNavigation.setupDrawerAria(
+          buttonRef.current,
+          drawerRef.current,
+          false
+        );
+      }
+      
+      // Return focus to button
+      if (buttonRef.current) {
+        buttonRef.current.focus();
+      }
+    }
+
+    return () => {
+      // Cleanup on unmount
+      if (cleanupFocusTrap.current) {
+        cleanupFocusTrap.current();
+      }
+      if (cleanupEscHandler.current) {
+        cleanupEscHandler.current();
+      }
+      MobileNavigation.preventBodyScroll(false);
+    };
+  }, [isMobileOpen]);
 
   return (
     <>
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
+          ref={buttonRef}
           variant="outline"
           size="icon"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="bg-card border-border"
+          className="bg-card border-border touch-target"
+          aria-controls="mobile-drawer"
+          aria-expanded={isMobileOpen}
+          aria-label={isMobileOpen ? 'Close menu' : 'Open menu'}
         >
           {isMobileOpen ? (
             <X className="h-4 w-4" />
@@ -75,16 +154,22 @@ export function Sidebar() {
       {isMobileOpen && (
         <div
           className="lg:hidden fixed inset-0 z-40 bg-black/50"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={closeDrawer}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <div
+        ref={drawerRef}
+        id="mobile-drawer"
         className={cn(
-          'fixed left-0 top-0 z-40 h-full w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
+          'fixed left-0 top-0 z-40 h-full w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 mobile-drawer mobile-drawer-content',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -100,9 +185,9 @@ export function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => setIsMobileOpen(false)}
+                  onClick={closeDrawer}
                   className={cn(
-                    'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors touch-target',
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'

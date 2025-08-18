@@ -94,7 +94,7 @@ export default function WithdrawalPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 mobile-padding">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Saque</h1>
           <p className="text-muted-foreground">
@@ -136,7 +136,7 @@ export default function WithdrawalPage() {
           </Card>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 mobile-form">
           {/* Amount Input */}
           <Card>
             <CardHeader>
@@ -199,12 +199,12 @@ export default function WithdrawalPage() {
             </CardHeader>
             <CardContent>
               <Tabs value={selectedMethod} onValueChange={(value) => setSelectedMethod(value as 'crypto' | 'pix')}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="crypto">
+                <TabsList className="grid w-full grid-cols-2 mobile-form-stack">
+                  <TabsTrigger value="crypto" className="mobile-button">
                     <Banknote className="w-4 h-4 mr-2" />
                     Crypto (USDT)
                   </TabsTrigger>
-                  <TabsTrigger value="pix">
+                  <TabsTrigger value="pix" className="mobile-button">
                     <CreditCard className="w-4 h-4 mr-2" />
                     PIX
                   </TabsTrigger>
@@ -237,7 +237,7 @@ export default function WithdrawalPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Tipo de Chave PIX</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2 max-md:mobile-form-stack">
                         {[
                           { value: 'cpf', label: 'CPF' },
                           { value: 'email', label: 'Email' },
@@ -283,7 +283,7 @@ export default function WithdrawalPage() {
 
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full mobile-button" 
             disabled={!canWithdraw || numericAmount <= 0 || !hasBalance}
           >
             Continuar para Confirmação
