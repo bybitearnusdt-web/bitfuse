@@ -6,6 +6,12 @@ import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { TrendingUp, Wallet, Users, DollarSign } from 'lucide-react';
 
 export default function Dashboard() {
+  // TODO: Replace with dynamic user data fetching
+  // Example implementations:
+  // - Supabase: const { data: user } = await supabaseClient.from('users').select('*').single()
+  // - Firebase: const user = await getDoc(doc(db, 'users', userId))
+  // - Custom API: const user = await fetch('/api/user').then(res => res.json())
+  // - React Query: const { data: user } = useQuery('user', fetchUser)
   const { balance, activeInvestments } = DEFAULT_USER;
 
   return (
@@ -88,6 +94,13 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {/* TODO: Replace with dynamic transaction data fetching
+                    Example implementations:
+                    - Supabase: const { data: transactions } = await supabaseClient.from('transactions').select('*').order('created_at', { ascending: false }).limit(5)
+                    - Firebase: const transactions = await getDocs(query(collection(db, 'transactions'), orderBy('createdAt', 'desc'), limit(5)))
+                    - Custom API: const transactions = await fetch('/api/transactions').then(res => res.json())
+                    - React Query: const { data: transactions } = useQuery('transactions', fetchTransactions)
+                */}
                 {MOCK_TRANSACTIONS.slice(0, 5).map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between">
                     <div className="flex flex-col">

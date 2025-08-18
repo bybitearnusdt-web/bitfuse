@@ -1,6 +1,7 @@
 'use client';
 
 import { User, LogOut, Settings, Shield } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,25 +15,29 @@ import { DEFAULT_USER } from '@/lib/constants';
 import { getInitials } from '@/lib/utils';
 
 export function UserDropdown() {
+  const router = useRouter();
+
   const handleLogout = () => {
-    // Logout logic will be implemented later
+    // TODO: Implement logout logic with authentication provider
+    // Example integrations:
+    // - Supabase: supabaseClient.auth.signOut()
+    // - Firebase: signOut(auth)
+    // - Custom API: await fetch('/api/auth/logout', { method: 'POST' })
     console.log('Logout clicked');
   };
 
   const handleProfileClick = () => {
-    // Navigate to profile page
-    window.location.href = '/perfil';
+    router.push('/perfil');
   };
 
   const handleAdminClick = () => {
-    // Navigate to admin page
-    window.location.href = '/admin';
+    router.push('/admin');
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="Menu do usuário">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
             {getInitials(DEFAULT_USER.name)}
           </div>

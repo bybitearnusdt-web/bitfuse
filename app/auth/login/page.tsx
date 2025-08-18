@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,10 +20,24 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Mock login - redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
+    try {
+      // TODO: Replace with actual authentication provider integration
+      // Example integrations:
+      // - Supabase: supabaseClient.auth.signInWithPassword({ email, password })
+      // - Firebase: signInWithEmailAndPassword(auth, email, password)
+      // - Custom API: await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+      
+      // Simulate login process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Navigate to dashboard on successful login
+      router.push('/');
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Handle login errors here
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,6 +69,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  aria-label="Endereço de email"
                 />
               </div>
               
@@ -66,6 +83,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    aria-label="Senha"
                   />
                   <Button
                     type="button"
@@ -73,6 +91,7 @@ export default function LoginPage() {
                     size="icon"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -92,7 +111,7 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading} aria-label="Entrar na conta">
                 {isLoading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
