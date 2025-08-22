@@ -10,13 +10,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DEFAULT_USER } from '@/lib/constants';
+import { useAuth } from '@/lib/auth';
+import { useProfile } from '@/lib/hooks';
 import { getInitials } from '@/lib/utils';
 
 export function UserDropdown() {
-  const handleLogout = () => {
-    // Logout logic will be implemented later
-    console.log('Logout clicked');
+  const { user, signOut } = useAuth();
+  const { profile } = useProfile();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleProfileClick = () => {
@@ -29,21 +36,24 @@ export function UserDropdown() {
     window.location.href = '/admin';
   };
 
+  const displayName = profile?.name || user?.user_metadata?.full_name || user?.email || 'User';
+  const displayEmail = profile?.email || user?.email || '';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-            {getInitials(DEFAULT_USER.name)}
+            {getInitials(displayName)}
           </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{DEFAULT_USER.name}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {DEFAULT_USER.email}
+              {displayEmail}
             </p>
           </div>
         </DropdownMenuLabel>
